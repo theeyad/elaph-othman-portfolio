@@ -850,6 +850,7 @@ html {
 .scroll-top.show {
   display: flex;
   animation: fadeIn 0.3s ease;
+  -webkit-animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
