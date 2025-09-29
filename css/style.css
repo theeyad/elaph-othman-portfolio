@@ -780,6 +780,52 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Mobile Read More/Read Less */
+@media (max-width: 768px) {
+  .project-content .text-container p.truncated {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .project-content .text-container p.expanded {
+    white-space: normal;
+  }
+
+  .read-more-controls {
+    margin-top: 0.5rem;
+  }
+
+  .read-more-btn,
+  .read-less-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    transition: var(--transition);
+    padding: 0;
+    margin: 0;
+  }
+
+  .read-more-btn:hover,
+  .read-less-btn:hover {
+    opacity: 0.8;
+  }
+
+  .read-more-btn:focus,
+  .read-less-btn:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+
+  .read-less-btn {
+    color: #ff4757;
+  }
+}
+
 /* Scroll to Top Button */
 .scroll-top {
   position: fixed;
@@ -799,11 +845,6 @@ html {
   transition: var(--transition);
   z-index: 999;
   box-shadow: var(--shadow-light);
-}
-
-.scroll-top:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-heavy);
 }
 
 .scroll-top.show {

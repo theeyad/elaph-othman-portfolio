@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", function () {
   initMobileMenu();
   initSmoothScrolling();
   initScrollEffects();
+  initScrollToTop();
+  initReadMoreFunctionality();
   initContactForm();
   initAnimations();
 });
@@ -154,6 +156,223 @@ function initScrollEffects() {
 
   animateElements.forEach((el) => {
     observer.observe(el);
+  });
+}
+
+// Scroll to Top Button functionality
+function initScrollToTop() {
+  const scrollTopBtn = document.getElementById("scroll-top");
+
+  if (!scrollTopBtn) return;
+
+  let isVisible = false;
+  let fadeTimeout;
+
+  // Show/hide scroll to top button based on scroll position
+  function toggleScrollTopButton() {
+    if (window.pageYOffset > 300) {
+      showButton();
+    } else {
+      hideButton();
+    }
+  }
+
+  // Show button with fade-in effect
+  function showButton() {
+    if (!isVisible) {
+      isVisible = true;
+      clearTimeout(fadeTimeout);
+
+      // Set display and start with opacity 0
+      scrollTopBtn.style.display = "flex";
+      scrollTopBtn.style.opacity = "0";
+
+      // Force reflow then animate to opacity 1
+      scrollTopBtn.offsetHeight; // Force reflow
+      scrollTopBtn.style.transition = "opacity 0.3s ease";
+      scrollTopBtn.style.opacity = "1";
+    }
+  }
+
+  // Hide button with fade-out effect
+  function hideButton() {
+    if (isVisible) {
+      isVisible = false;
+      clearTimeout(fadeTimeout);
+
+      // Start fade out
+      scrollTopBtn.style.transition = "opacity 0.4s ease";
+      scrollTopBtn.style.opacity = "0";
+
+      // Hide completely after fade out completes
+      fadeTimeout = setTimeout(() => {
+        if (!isVisible) {
+          // Double check visibility state
+          scrollTopBtn.style.display = "none";
+        }
+      }, 400); // Match the transition duration
+    }
+  }
+
+  // Scroll to top when button is clicked
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  // Add event listeners
+  window.addEventListener("scroll", toggleScrollTopButton);
+  scrollTopBtn.addEventListener("click", scrollToTop);
+
+  // Initial setup
+  scrollTopBtn.style.display = "none";
+  scrollTopBtn.style.opacity = "0";
+  toggleScrollTopButton();
+}
+
+// Read More/Read Less functionality for mobile
+function initReadMoreFunctionality() {
+  // Only apply on mobile screens
+  function isMobile() {
+    return window.innerWidth <= 768;
+  }
+
+  function setupReadMore() {
+    if (!isMobile()) {
+      // Remove mobile classes and buttons on larger screens
+      const textContainers = document.querySelectorAll(
+        ".project-content .text-container"
+      );
+      textContainers.forEach((container) => {
+        const paragraph = container.querySelector("p");
+        if (paragraph) {
+          paragraph.classList.remove("truncated", "expanded");
+        }
+        const controlsContainer = container.querySelector(
+          ".read-more-controls"
+        );
+        if (controlsContainer) {
+          controlsContainer.remove();
+        }
+      });
+      return;
+    }
+
+    const textContainers = document.querySelectorAll(
+      ".project-content .text-container"
+    );
+
+    textContainers.forEach((container, index) => {
+      const paragraph = container.querySelector("p");
+      if (!paragraph) return;
+
+      // Set unique ID for aria-controls
+      const paragraphId = `project-text-${index}`;
+      paragraph.id = paragraphId;
+
+      // Preserve expanded state
+      const wasExpanded = paragraph.classList.contains("expanded");
+
+      // Always check if text overflows when truncated
+      paragraph.classList.remove("expanded");
+      paragraph.classList.add("truncated");
+      const isOverflowing = paragraph.scrollWidth > paragraph.clientWidth;
+
+      // Get or create controls container
+      let controlsContainer = container.querySelector(".read-more-controls");
+      let readMoreBtn, readLessBtn;
+
+      if (!isOverflowing) {
+        // Text fits in one line, remove controls if they exist
+        paragraph.classList.remove("truncated");
+        if (controlsContainer) {
+          controlsContainer.remove();
+        }
+        return;
+      }
+
+      // Create controls container if it doesn't exist
+      if (!controlsContainer) {
+        controlsContainer = document.createElement("div");
+        controlsContainer.className = "read-more-controls";
+
+        // Create read more button
+        readMoreBtn = document.createElement("button");
+        readMoreBtn.className = "read-more-btn";
+        readMoreBtn.textContent = "read more";
+        readMoreBtn.setAttribute("type", "button");
+        readMoreBtn.setAttribute("aria-controls", paragraphId);
+
+        // Create read less button
+        readLessBtn = document.createElement("button");
+        readLessBtn.className = "read-less-btn";
+        readLessBtn.textContent = "read less";
+        readLessBtn.setAttribute("type", "button");
+        readLessBtn.setAttribute("aria-controls", paragraphId);
+
+        // Add buttons to controls container
+        controlsContainer.appendChild(readMoreBtn);
+        controlsContainer.appendChild(readLessBtn);
+
+        // Add controls container after the paragraph
+        container.appendChild(controlsContainer);
+
+        // Read more click handler
+        readMoreBtn.addEventListener("click", function () {
+          paragraph.classList.remove("truncated");
+          paragraph.classList.add("expanded");
+          paragraph.setAttribute("data-expanded", "true");
+          readMoreBtn.hidden = true;
+          readLessBtn.hidden = false;
+          readMoreBtn.setAttribute("aria-expanded", "true");
+          readLessBtn.setAttribute("aria-expanded", "true");
+        });
+
+        // Read less click handler
+        readLessBtn.addEventListener("click", function () {
+          paragraph.classList.remove("expanded");
+          paragraph.classList.add("truncated");
+          paragraph.removeAttribute("data-expanded");
+          readLessBtn.hidden = true;
+          readMoreBtn.hidden = false;
+          readMoreBtn.setAttribute("aria-expanded", "false");
+          readLessBtn.setAttribute("aria-expanded", "false");
+        });
+      } else {
+        // Get existing buttons
+        readMoreBtn = controlsContainer.querySelector(".read-more-btn");
+        readLessBtn = controlsContainer.querySelector(".read-less-btn");
+      }
+
+      // Set initial state based on preserved expansion state
+      if (wasExpanded || paragraph.getAttribute("data-expanded") === "true") {
+        paragraph.classList.remove("truncated");
+        paragraph.classList.add("expanded");
+        readMoreBtn.hidden = true;
+        readLessBtn.hidden = false;
+        readMoreBtn.setAttribute("aria-expanded", "true");
+        readLessBtn.setAttribute("aria-expanded", "true");
+      } else {
+        paragraph.classList.add("truncated");
+        paragraph.classList.remove("expanded");
+        readMoreBtn.hidden = false;
+        readLessBtn.hidden = true;
+        readMoreBtn.setAttribute("aria-expanded", "false");
+        readLessBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+
+  // Initial setup
+  setupReadMore();
+
+  // Re-setup on window resize
+  let resizeTimeout;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(setupReadMore, 250);
   });
 }
 
@@ -448,13 +667,3 @@ window.addEventListener("load", function () {
 
   document.head.appendChild(loadingStyle);
 });
-
-// Console message for developers
-console.log(
-  "%c🚀 PowerBI Portfolio Loaded Successfully!",
-  "color: #f3c623; font-size: 16px; font-weight: bold;"
-);
-console.log(
-  "%cBuilt with HTML, CSS, and JavaScript",
-  "color: #b0b0b0; font-size: 12px;"
-);
